@@ -30,8 +30,11 @@ def main():
     if os.path.exists(pbix_dir):
         shutil.rmtree(pbix_dir)
 
-    with ZipFile(pbix_file, 'r') as zfile: 
-        zfile.extractall(path=pbix_dir)
+    try:
+        with ZipFile(pbix_file, 'r') as zfile: 
+            zfile.extractall(path=pbix_dir)
+    except:
+        logger.error(f"Error opening file {pbix_file}")
 
     for file in walk_dir(pbix_dir, []):
         logger.debug(f"Processing {file}")
@@ -59,6 +62,11 @@ def main():
                         logger.debug(f"Error parsing file {file} as JSON")
             except:
                 logger.debug(f"Cannot open file {file}. Likely a binary file")
+                if file == os.path.join(pbix_dir, 'DataModel'):
+                    logger.debug(f"Zero out DataModel file from PBIX")
+                    f.seek(0)
+                    f.truncate()
+
         if file_updated and file_ext == '':
             os.rename(file, file + '.json')
             logger.debug(f"Renamed file {file} to {file + '.json'}")
